@@ -1,0 +1,6 @@
+{
+  "name": "SugarPop - Candy Match-3 Puzzle",
+  "description": "Candy-themed Match-3 puzzle web game built with React and TypeScript, featuring original candy art, special combos, 30 campaign levels, and responsive mobile-friendly gameplay.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

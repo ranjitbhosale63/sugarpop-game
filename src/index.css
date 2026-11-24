@@ -1,0 +1,788 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Fredoka', 'Outfit', system-ui, -apple-system, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    background-color: #1a102f;
+    color: #ffffff;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom 3D candy button effects and glossy highlights */
+.candy-btn-shadow {
+  box-shadow: 0 8px 0 rgba(0, 0, 0, 0.28), 0 14px 20px rgba(0, 0, 0, 0.35);
+}
+
+.candy-btn-shadow:active {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.28), 0 6px 10px rgba(0, 0, 0, 0.3);
+}
+
+.candy-title-stroke {
+  -webkit-text-stroke: 3px #531238;
+  text-shadow: 0 6px 0 #531238, 0 10px 14px rgba(0, 0, 0, 0.4);
+}
+
+.candy-title-stroke-inner {
+  -webkit-text-stroke: 1.5px #ffe0ed;
+}
+
+/* Candy Land animations */
+@keyframes gentle-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shine-sweep {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  20%, 100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+/* Candy Landing Bounce (Legacy fallback) */
+@keyframes candy-land-bounce {
+  0% {
+    transform: translateY(-28px) scaleY(1.15) scaleX(0.9);
+    opacity: 0.85;
+  }
+  65% {
+    transform: translateY(4px) scaleY(0.92) scaleX(1.08);
+  }
+  85% {
+    transform: translateY(-2px) scaleY(1.03) scaleX(0.98);
+  }
+  100% {
+    transform: translateY(0px) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Distance-Aware Candy Drops (1 to 8 rows) with Elastic Squash-and-Stretch */
+@keyframes candy-drop-1 {
+  0% { transform: translateY(calc(-100% - 4px)) scaleY(1.06) scaleX(0.96); }
+  70% { transform: translateY(0%) scaleY(1.03) scaleX(0.98); }
+  80% { transform: translateY(2px) scaleY(0.9) scaleX(1.1); }
+  90% { transform: translateY(-2.5px) scaleY(1.02) scaleX(0.99); }
+  100% { transform: translateY(0px) scale(1); }
+}
+@keyframes candy-drop-2 {
+  0% { transform: translateY(calc(-200% - 8px)) scaleY(1.08) scaleX(0.94); }
+  70% { transform: translateY(0%) scaleY(1.04) scaleX(0.97); }
+  80% { transform: translateY(2px) scaleY(0.89) scaleX(1.11); }
+  90% { transform: translateY(-3px) scaleY(1.03) scaleX(0.98); }
+  100% { transform: translateY(0px) scale(1); }
+}
+@keyframes candy-drop-3 {
+  0% { transform: translateY(calc(-300% - 12px)) scaleY(1.1) scaleX(0.93); }
+  70% { transform: translateY(0%) scaleY(1.05) scaleX(0.96); }
+  80% { transform: translateY(2.5px) scaleY(0.88) scaleX(1.12); }
+  90% { transform: translateY(-3.5px) scaleY(1.03) scaleX(0.98); }
+  100% { transform: translateY(0px) scale(1); }
+}
+@keyframes candy-drop-4 {
+  0% { transform: translateY(calc(-400% - 16px)) scaleY(1.12) scaleX(0.92); }
+  70% { transform: translateY(0%) scaleY(1.06) scaleX(0.95); }
+  80% { transform: translateY(2.5px) scaleY(0.87) scaleX(1.13); }
+  90% { transform: translateY(-4px) scaleY(1.03) scaleX(0.98); }
+  100% { transform: translateY(0px) scale(1); }
+}
+@keyframes candy-drop-5 {
+  0% { transform: translateY(calc(-500% - 20px)) scaleY(1.13) scaleX(0.91); }
+  70% { transform: translateY(0%) scaleY(1.06) scaleX(0.95); }
+  80% { transform: translateY(3px) scaleY(0.86) scaleX(1.14); }
+  90% { transform: translateY(-4px) scaleY(1.04) scaleX(0.98); }
+  100% { transform: translateY(0px) scale(1); }
+}
+@keyframes candy-drop-6 {
+  0% { transform: translateY(calc(-600% - 24px)) scaleY(1.14) scaleX(0.9); }
+  70% { transform: translateY(0%) scaleY(1.07) scaleX(0.94); }
+  80% { transform: translateY(3px) scaleY(0.86) scaleX(1.14); }
+  90% { transform: translateY(-4.5px) scaleY(1.04) scaleX(0.97); }
+  100% { transform: translateY(0px) scale(1); }
+}
+@keyframes candy-drop-7 {
+  0% { transform: translateY(calc(-700% - 28px)) scaleY(1.15) scaleX(0.9); }
+  70% { transform: translateY(0%) scaleY(1.07) scaleX(0.94); }
+  80% { transform: translateY(3.5px) scaleY(0.85) scaleX(1.15); }
+  90% { transform: translateY(-4.5px) scaleY(1.04) scaleX(0.97); }
+  100% { transform: translateY(0px) scale(1); }
+}
+@keyframes candy-drop-8 {
+  0% { transform: translateY(calc(-800% - 32px)) scaleY(1.16) scaleX(0.89); }
+  70% { transform: translateY(0%) scaleY(1.08) scaleX(0.93); }
+  80% { transform: translateY(3.5px) scaleY(0.85) scaleX(1.15); }
+  90% { transform: translateY(-5px) scaleY(1.04) scaleX(0.97); }
+  100% { transform: translateY(0px) scale(1); }
+}
+
+/* Newly Spawned Candies Entering from Above the Board */
+@keyframes candy-spawn-1 {
+  0% { transform: translateY(calc(-100% - 4px)) scaleY(1.06) scaleX(0.96); opacity: 0; }
+  14% { opacity: 1; }
+  70% { transform: translateY(0%) scaleY(1.03) scaleX(0.98); opacity: 1; }
+  80% { transform: translateY(2px) scaleY(0.9) scaleX(1.1); }
+  90% { transform: translateY(-2.5px) scaleY(1.02) scaleX(0.99); }
+  100% { transform: translateY(0px) scale(1); opacity: 1; }
+}
+@keyframes candy-spawn-2 {
+  0% { transform: translateY(calc(-200% - 8px)) scaleY(1.08) scaleX(0.94); opacity: 0; }
+  14% { opacity: 1; }
+  70% { transform: translateY(0%) scaleY(1.04) scaleX(0.97); opacity: 1; }
+  80% { transform: translateY(2px) scaleY(0.89) scaleX(1.11); }
+  90% { transform: translateY(-3px) scaleY(1.03) scaleX(0.98); }
+  100% { transform: translateY(0px) scale(1); opacity: 1; }
+}
+@keyframes candy-spawn-3 {
+  0% { transform: translateY(calc(-300% - 12px)) scaleY(1.1) scaleX(0.93); opacity: 0; }
+  14% { opacity: 1; }
+  70% { transform: translateY(0%) scaleY(1.05) scaleX(0.96); opacity: 1; }
+  80% { transform: translateY(2.5px) scaleY(0.88) scaleX(1.12); }
+  90% { transform: translateY(-3.5px) scaleY(1.03) scaleX(0.98); }
+  100% { transform: translateY(0px) scale(1); opacity: 1; }
+}
+@keyframes candy-spawn-4 {
+  0% { transform: translateY(calc(-400% - 16px)) scaleY(1.12) scaleX(0.92); opacity: 0; }
+  14% { opacity: 1; }
+  70% { transform: translateY(0%) scaleY(1.06) scaleX(0.95); opacity: 1; }
+  80% { transform: translateY(2.5px) scaleY(0.87) scaleX(1.13); }
+  90% { transform: translateY(-4px) scaleY(1.03) scaleX(0.98); }
+  100% { transform: translateY(0px) scale(1); opacity: 1; }
+}
+@keyframes candy-spawn-5 {
+  0% { transform: translateY(calc(-500% - 20px)) scaleY(1.13) scaleX(0.91); opacity: 0; }
+  14% { opacity: 1; }
+  70% { transform: translateY(0%) scaleY(1.06) scaleX(0.95); opacity: 1; }
+  80% { transform: translateY(3px) scaleY(0.86) scaleX(1.14); }
+  90% { transform: translateY(-4px) scaleY(1.04) scaleX(0.98); }
+  100% { transform: translateY(0px) scale(1); opacity: 1; }
+}
+@keyframes candy-spawn-6 {
+  0% { transform: translateY(calc(-600% - 24px)) scaleY(1.14) scaleX(0.9); opacity: 0; }
+  14% { opacity: 1; }
+  70% { transform: translateY(0%) scaleY(1.07) scaleX(0.94); opacity: 1; }
+  80% { transform: translateY(3px) scaleY(0.86) scaleX(1.14); }
+  90% { transform: translateY(-4.5px) scaleY(1.04) scaleX(0.97); }
+  100% { transform: translateY(0px) scale(1); opacity: 1; }
+}
+@keyframes candy-spawn-7 {
+  0% { transform: translateY(calc(-700% - 28px)) scaleY(1.15) scaleX(0.9); opacity: 0; }
+  14% { opacity: 1; }
+  70% { transform: translateY(0%) scaleY(1.07) scaleX(0.94); opacity: 1; }
+  80% { transform: translateY(3.5px) scaleY(0.85) scaleX(1.15); }
+  90% { transform: translateY(-4.5px) scaleY(1.04) scaleX(0.97); }
+  100% { transform: translateY(0px) scale(1); opacity: 1; }
+}
+@keyframes candy-spawn-8 {
+  0% { transform: translateY(calc(-800% - 32px)) scaleY(1.16) scaleX(0.89); opacity: 0; }
+  14% { opacity: 1; }
+  70% { transform: translateY(0%) scaleY(1.08) scaleX(0.93); opacity: 1; }
+  80% { transform: translateY(3.5px) scaleY(0.85) scaleX(1.15); }
+  90% { transform: translateY(-5px) scaleY(1.04) scaleX(0.97); }
+  100% { transform: translateY(0px) scale(1); opacity: 1; }
+}
+
+/* Matching Candy Pop Burst */
+@keyframes candy-pop-burst {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.28) rotate(8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0) rotate(-15deg);
+    opacity: 0;
+  }
+}
+
+/* Floating Score / Text Floater */
+@keyframes float-score-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.6);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.2);
+  }
+  75% {
+    opacity: 1;
+    transform: translateY(-32px) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-48px) scale(0.9);
+  }
+}
+
+/* Big Match Banner Shockwave */
+@keyframes shockwave-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.98);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.animate-candy-bounce {
+  animation: candy-land-bounce 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Distance-Aware Drop Classes */
+.animate-candy-drop-1 { animation: candy-drop-1 0.22s ease-out forwards; }
+.animate-candy-drop-2 { animation: candy-drop-2 0.26s ease-out forwards; }
+.animate-candy-drop-3 { animation: candy-drop-3 0.29s ease-out forwards; }
+.animate-candy-drop-4 { animation: candy-drop-4 0.32s ease-out forwards; }
+.animate-candy-drop-5 { animation: candy-drop-5 0.35s ease-out forwards; }
+.animate-candy-drop-6 { animation: candy-drop-6 0.38s ease-out forwards; }
+.animate-candy-drop-7 { animation: candy-drop-7 0.41s ease-out forwards; }
+.animate-candy-drop-8 { animation: candy-drop-8 0.44s ease-out forwards; }
+
+/* Distance-Aware Spawn Classes (from above board) */
+.animate-candy-spawn-1 { animation: candy-spawn-1 0.22s ease-out forwards; }
+.animate-candy-spawn-2 { animation: candy-spawn-2 0.26s ease-out forwards; }
+.animate-candy-spawn-3 { animation: candy-spawn-3 0.29s ease-out forwards; }
+.animate-candy-spawn-4 { animation: candy-spawn-4 0.32s ease-out forwards; }
+.animate-candy-spawn-5 { animation: candy-spawn-5 0.35s ease-out forwards; }
+.animate-candy-spawn-6 { animation: candy-spawn-6 0.38s ease-out forwards; }
+.animate-candy-spawn-7 { animation: candy-spawn-7 0.41s ease-out forwards; }
+.animate-candy-spawn-8 { animation: candy-spawn-8 0.44s ease-out forwards; }
+
+/* 2D Vector Drop & Spawn for Diagonal Side-Entry & Interior Playable Spawners */
+@keyframes candy-drop-vector {
+  0% { transform: translate3d(var(--drop-x, 0%), var(--drop-y, -100%), 0) scaleY(1.06) scaleX(0.95); }
+  74% { transform: translate3d(0%, 2px, 0) scaleY(0.91) scaleX(1.09); }
+  88% { transform: translate3d(0%, -2px, 0) scaleY(1.03) scaleX(0.98); }
+  100% { transform: translate3d(0%, 0%, 0) scale(1); }
+}
+
+@keyframes candy-spawn-vector {
+  0% { transform: translate3d(var(--drop-x, 0%), var(--drop-y, 0%), 0) scale(0.72); opacity: 0; }
+  20% { opacity: 1; }
+  74% { transform: translate3d(0%, 2px, 0) scaleY(0.91) scaleX(1.09); opacity: 1; }
+  88% { transform: translate3d(0%, -2px, 0) scaleY(1.03) scaleX(0.98); }
+  100% { transform: translate3d(0%, 0%, 0) scale(1); opacity: 1; }
+}
+
+.animate-candy-drop-vector { animation: candy-drop-vector 0.28s ease-out forwards; }
+.animate-candy-spawn-vector { animation: candy-spawn-vector 0.28s ease-out forwards; }
+
+.animate-candy-pop {
+  will-change: transform, opacity;
+  animation: candy-pop-burst 0.26s ease-out forwards;
+}
+
+.animate-float-score {
+  animation: float-score-up 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-shockwave {
+  animation: shockwave-pulse 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-gentle-float {
+  animation: gentle-float 4s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+
+.shine-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-effect::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 60%
+  );
+  animation: shine-sweep 4s infinite ease-in-out;
+  pointer-events: none;
+}
+
+/* Local Candy Match Particles & Sparkles */
+@keyframes match-particle-burst {
+  0% {
+    transform: translate3d(-50%, -50%, 0) scale(0.45) rotate(0deg);
+    opacity: 1;
+  }
+  25% {
+    transform: translate3d(calc(-50% + var(--tx, 0px) * 0.45), calc(-50% + var(--ty, 0px) * 0.45), 0) scale(1.15) rotate(calc(var(--rot, 0deg) * 0.4));
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px)), 0) scale(0.1) rotate(var(--rot, 0deg));
+    opacity: 0;
+  }
+}
+
+@keyframes match-sparkle-twinkle {
+  0% {
+    transform: translate3d(-50%, -50%, 0) scale(0.25) rotate(0deg);
+    opacity: 0;
+  }
+  25% {
+    transform: translate3d(calc(-50% + var(--tx, 0px) * 0.35), calc(-50% + var(--ty, 0px) * 0.35), 0) scale(1.25) rotate(45deg);
+    opacity: 1;
+  }
+  70% {
+    transform: translate3d(calc(-50% + var(--tx, 0px) * 0.85), calc(-50% + var(--ty, 0px) * 0.85), 0) scale(0.9) rotate(95deg);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(calc(-50% + var(--tx, 0px)), calc(-50% + var(--ty, 0px)), 0) scale(0) rotate(140deg);
+    opacity: 0;
+  }
+}
+
+@keyframes match-ring-expand {
+  0% {
+    transform: translate3d(-50%, -50%, 0) scale(0.35);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(-50%, -50%, 0) scale(1.6);
+    opacity: 0;
+  }
+}
+
+@keyframes match-reduced-fade {
+  0% {
+    transform: translate3d(-50%, -50%, 0) scale(0.9);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate3d(-50%, -50%, 0) scale(1);
+    opacity: 0;
+  }
+}
+
+.animate-match-particle {
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: match-particle-burst var(--dur, 400ms) cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0ms) forwards;
+}
+
+.animate-match-sparkle {
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: match-sparkle-twinkle var(--dur, 440ms) cubic-bezier(0.22, 1, 0.36, 1) var(--delay, 0ms) forwards;
+}
+
+.animate-match-ring {
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: match-ring-expand 340ms cubic-bezier(0.16, 1, 0.3, 1) var(--delay, 0ms) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-match-particle,
+  .animate-match-sparkle,
+  .animate-match-ring {
+    animation: match-reduced-fade 160ms ease-out forwards !important;
+  }
+
+  .animate-board-impact-micro,
+  .animate-board-impact-strong,
+  .animate-sugar-crush-create,
+  .animate-sugar-crush-prime,
+  .animate-sugar-crush-trail-h,
+  .animate-sugar-crush-trail-v,
+  .animate-sugar-crush-tip-left,
+  .animate-sugar-crush-tip-right,
+  .animate-sugar-crush-tip-up,
+  .animate-sugar-crush-tip-down,
+  .animate-sugar-crush-segment-fade,
+  .animate-hint-candy,
+  .animate-color-bomb-charge,
+  .animate-color-bomb-aura,
+  .animate-color-bomb-zap-beam,
+  .animate-color-bomb-zap-fade,
+  .animate-color-bomb-candy-pop {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* Subtle Board Impact Animations (4-match micro-shake & 5+ match impact) */
+@keyframes board-impact-micro {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(-2px, 1.5px, 0);
+  }
+  45% {
+    transform: translate3d(2px, -1px, 0);
+  }
+  70% {
+    transform: translate3d(-1px, 0.5px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes board-impact-strong {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  18% {
+    transform: translate3d(-3.5px, 2.5px, 0) scale(1.012);
+  }
+  36% {
+    transform: translate3d(3.5px, -2px, 0) scale(1.006);
+  }
+  56% {
+    transform: translate3d(-2.5px, 1.5px, 0) scale(1.002);
+  }
+  78% {
+    transform: translate3d(1.5px, -0.5px, 0) scale(1);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.animate-board-impact-micro {
+  will-change: transform;
+  animation: board-impact-micro 220ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-board-impact-strong {
+  will-change: transform;
+  animation: board-impact-strong 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Sugar Crush Striped Candy Creation Scale-Pop */
+@keyframes sugar-crush-create-pop {
+  0% {
+    transform: scale(0.75);
+    filter: brightness(1.1);
+  }
+  42% {
+    transform: scale(1.32) rotate(-4deg);
+    filter: brightness(1.65) drop-shadow(0 0 10px rgba(255, 224, 102, 0.95));
+  }
+  74% {
+    transform: scale(0.94) rotate(2deg);
+    filter: brightness(1.2) drop-shadow(0 0 6px rgba(255, 255, 255, 0.7));
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+}
+
+.animate-sugar-crush-create {
+  will-change: transform, filter;
+  animation: sugar-crush-create-pop 280ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Sugar Crush Pre-Fire Cue Pulse */
+@keyframes sugar-crush-prime-pulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  45% {
+    transform: scale(1.24);
+    filter: brightness(1.65) drop-shadow(0 0 12px rgba(253, 224, 71, 0.95));
+  }
+  100% {
+    transform: scale(1.1);
+    filter: brightness(1.35) drop-shadow(0 0 8px rgba(255, 255, 255, 0.85));
+  }
+}
+
+.animate-sugar-crush-prime {
+  will-change: transform, filter;
+  animation: sugar-crush-prime-pulse 150ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Sugar Crush Split Travelling Striped Laser Beams & Tips */
+@keyframes sugar-crush-trail-h {
+  0% {
+    transform: scaleX(0);
+    opacity: 0.96;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sugar-crush-trail-v {
+  0% {
+    transform: scaleY(0);
+    opacity: 0.96;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sugar-crush-tip-right {
+  0% {
+    left: 0%;
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes sugar-crush-tip-left {
+  0% {
+    left: 100%;
+    opacity: 1;
+  }
+  100% {
+    left: 0%;
+    opacity: 1;
+  }
+}
+
+@keyframes sugar-crush-tip-down {
+  0% {
+    top: 0%;
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 1;
+  }
+}
+
+@keyframes sugar-crush-tip-up {
+  0% {
+    top: 100%;
+    opacity: 1;
+  }
+  100% {
+    top: 0%;
+    opacity: 1;
+  }
+}
+
+@keyframes sugar-crush-segment-fade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-sugar-crush-trail-h {
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: sugar-crush-trail-h var(--beam-dur, 200ms) linear var(--beam-delay, 0ms) forwards;
+}
+
+.animate-sugar-crush-trail-v {
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: sugar-crush-trail-v var(--beam-dur, 200ms) linear var(--beam-delay, 0ms) forwards;
+}
+
+.animate-sugar-crush-tip-right {
+  opacity: 0;
+  will-change: left, opacity;
+  animation: sugar-crush-tip-right var(--beam-dur, 200ms) linear var(--beam-delay, 0ms) forwards;
+}
+
+.animate-sugar-crush-tip-left {
+  opacity: 0;
+  will-change: left, opacity;
+  animation: sugar-crush-tip-left var(--beam-dur, 200ms) linear var(--beam-delay, 0ms) forwards;
+}
+
+.animate-sugar-crush-tip-down {
+  opacity: 0;
+  will-change: top, opacity;
+  animation: sugar-crush-tip-down var(--beam-dur, 200ms) linear var(--beam-delay, 0ms) forwards;
+}
+
+.animate-sugar-crush-tip-up {
+  opacity: 0;
+  will-change: top, opacity;
+  animation: sugar-crush-tip-up var(--beam-dur, 200ms) linear var(--beam-delay, 0ms) forwards;
+}
+
+.animate-sugar-crush-segment-fade {
+  animation: sugar-crush-segment-fade 160ms ease-out var(--fade-delay, 220ms) forwards;
+}
+
+/* Automatic Matching Hint Subtle Candy Pulse */
+@keyframes hint-candy-pulse {
+  0%,
+  100% {
+    transform: scale(1) translateY(0px);
+    filter: brightness(1);
+  }
+  45% {
+    transform: scale(1.13) translateY(-2px);
+    filter: brightness(1.22) drop-shadow(0 0 8px rgba(253, 224, 71, 0.85));
+  }
+  75% {
+    transform: scale(1.04) translateY(0px);
+    filter: brightness(1.08) drop-shadow(0 0 4px rgba(253, 224, 71, 0.45));
+  }
+}
+
+.animate-hint-candy {
+  will-change: transform, filter;
+  animation: hint-candy-pulse 1.3s ease-in-out infinite;
+}
+
+/* Color Bomb Charge-Up Glow & Outward Travelling Rainbow Zap Beams (GPU transform + opacity) */
+@keyframes color-bomb-charge-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  38% {
+    transform: scale(1.16);
+    opacity: 1;
+  }
+  75% {
+    transform: scale(1.26);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0.96;
+  }
+}
+
+@keyframes color-bomb-aura-spin {
+  0% {
+    transform: scale(0.75) rotate(0deg);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.24) rotate(110deg);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.34) rotate(220deg);
+    opacity: 0.78;
+  }
+}
+
+@keyframes color-bomb-zap-beam {
+  0% {
+    transform: scaleX(0);
+    opacity: 0.92;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes color-bomb-zap-fade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes color-bomb-candy-pop {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  28% {
+    transform: scale(1.22);
+    opacity: 1;
+  }
+  66% {
+    transform: scale(0.78);
+    opacity: 0.68;
+  }
+  100% {
+    transform: scale(0.14);
+    opacity: 0;
+  }
+}
+
+.animate-color-bomb-charge {
+  will-change: transform, opacity;
+  animation: color-bomb-charge-pulse 240ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-color-bomb-aura {
+  will-change: transform, opacity;
+  animation: color-bomb-aura-spin 240ms cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.animate-color-bomb-zap-beam {
+  opacity: 0;
+  transform-origin: left center;
+  will-change: transform, opacity;
+  animation: color-bomb-zap-beam var(--zap-dur, 200ms) cubic-bezier(0.22, 1, 0.36, 1) var(--zap-delay, 0ms) forwards;
+}
+
+.animate-color-bomb-zap-fade {
+  will-change: opacity;
+  animation: color-bomb-zap-fade 220ms cubic-bezier(0.4, 0, 0.2, 1) var(--zap-fade-delay, 220ms) forwards;
+}
+
+.animate-color-bomb-candy-pop {
+  will-change: transform, opacity;
+  animation: color-bomb-candy-pop 340ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+
+
