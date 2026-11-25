@@ -14,7 +14,7 @@ import {
 import { LevelInfo, PlayerProfile, SoundSettings, CandyShape } from '../types/game';
 import { soundEngine } from '../audio/SoundEffects';
 import { OriginalCandy } from './OriginalCandies';
-import { formatRegenCountdown } from '../game-engine/economyEngine';
+import { LifeRegenCountdown } from './LifeRegenCountdown';
 import { WORLD_DEFINITIONS } from '../game-engine/levelCatalog';
 
 interface CandyWorldMapProps {
@@ -25,6 +25,7 @@ interface CandyWorldMapProps {
   soundSettings: SoundSettings;
   onSelectLevel: (level: LevelInfo) => void;
   onBackToHome: () => void;
+  onSyncLives?: () => void;
 }
 
 interface NodePoint {
@@ -71,6 +72,7 @@ export const CandyWorldMap: React.FC<CandyWorldMapProps> = ({
   soundSettings,
   onSelectLevel,
   onBackToHome,
+  onSyncLives,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const shakeTimeoutRef = useRef<number | null>(null);
@@ -266,11 +268,15 @@ export const CandyWorldMap: React.FC<CandyWorldMapProps> = ({
             <span className="text-[11px] tabular-nums">
               {playerProfile.lives}/{playerProfile.maxLives}
             </span>
-            <span className="text-[9px] font-bold text-pink-200 tabular-nums">
-              {playerProfile.lives >= playerProfile.maxLives
-                ? 'FULL'
-                : formatRegenCountdown(playerProfile.nextLifeSeconds)}
-            </span>
+            <LifeRegenCountdown
+              lives={playerProfile.lives}
+              maxLives={playerProfile.maxLives}
+              nextLifeSeconds={playerProfile.nextLifeSeconds}
+              lastLifeUpdatedAt={playerProfile.lastLifeUpdatedAt}
+              fullLabel="FULL"
+              onRegenReady={onSyncLives}
+              className="text-[9px] font-bold text-pink-200 tabular-nums"
+            />
           </div>
           <div className="flex items-center gap-1 px-2 py-1 rounded-xl bg-amber-500/30 border border-amber-400/40 text-amber-300">
             <Coins className="w-3.5 h-3.5 fill-amber-400 text-amber-300 shrink-0" />

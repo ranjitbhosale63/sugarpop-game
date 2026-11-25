@@ -33,7 +33,9 @@ import {
   calculatePreGameBoostersCost,
   deductCoins,
   deductLife,
+  getMsUntilNextLife,
   grantLife,
+  hasMeaningfulLifeStateChange,
   syncLivesWithTimestamp,
 } from './game-engine/economyEngine';
 import { RewardedAdResult, rewardedAdsService } from './services/rewardedAds';
@@ -85,47 +87,79 @@ export default function App() {
   const processedLifeLossAttemptsRef = useRef<Set<string>>(new Set());
   const processedLifeRewardTokensRef = useRef<Set<string>>(new Set());
 
-  // Live 1-second life regeneration tick whenever player has missing lives
+  const syncProfileLivesIfNeeded = useCallback(() => {
+    const nowMs = Date.now();
+    setPlayerProfile((prev) => {
+      const synced = syncLivesWithTimestamp(prev, nowMs);
+      if (!hasMeaningfulLifeStateChange(prev, synced, nowMs)) {
+        return prev;
+      }
+      playerProfileRef.current = synced;
+      return synced;
+    });
+  }, []);
+
+  // Schedule a single timeout for the exact millisecond the next life regenerates (no 1s root polling)
   useEffect(() => {
     if (playerProfile.lives >= playerProfile.maxLives) return;
 
-    const timerId = window.setInterval(() => {
-      setPlayerProfile((prev) => {
-        const synced = syncLivesWithTimestamp(prev, Date.now());
-        if (
-          synced.lives === prev.lives &&
-          synced.nextLifeSeconds === prev.nextLifeSeconds &&
-          synced.lastLifeUpdatedAt === prev.lastLifeUpdatedAt
-        ) {
-          return prev;
+    let timeoutId: number | null = null;
+    let isDisposed = false;
+
+    const scheduleNextLifeSync = () => {
+      if (isDisposed) return;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+
+      const msUntilNext = getMsUntilNextLife(playerProfileRef.current, Date.now());
+      if (msUntilNext === null) return;
+
+      const delay = Math.min(2_147_483_647, Math.max(25, msUntilNext + 25));
+      timeoutId = window.setTimeout(() => {
+        timeoutId = null;
+        if (isDisposed) return;
+        syncProfileLivesIfNeeded();
+        if (playerProfileRef.current.lives < playerProfileRef.current.maxLives) {
+          scheduleNextLifeSync();
         }
-        playerProfileRef.current = synced;
-        return synced;
-      });
-    }, 1000);
-
-    return () => window.clearInterval(timerId);
-  }, [playerProfile.lives, playerProfile.maxLives]);
-
-  // Catch up elapsed offline time when tab/window returns to focus
-  useEffect(() => {
-    const handleVisibilityOrFocus = () => {
-      if (document.visibilityState && document.visibilityState !== 'visible') return;
-      setPlayerProfile((prev) => {
-        if (prev.lives >= prev.maxLives) return prev;
-        const synced = syncLivesWithTimestamp(prev, Date.now());
-        playerProfileRef.current = synced;
-        return synced;
-      });
+      }, delay);
     };
 
-    window.addEventListener('focus', handleVisibilityOrFocus);
-    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    scheduleNextLifeSync();
+
     return () => {
-      window.removeEventListener('focus', handleVisibilityOrFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      isDisposed = true;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+        timeoutId = null;
+      }
     };
-  }, []);
+  }, [
+    playerProfile.lives,
+    playerProfile.maxLives,
+    playerProfile.nextLifeSeconds,
+    playerProfile.lastLifeUpdatedAt,
+    syncProfileLivesIfNeeded,
+  ]);
+
+  // Catch up elapsed offline time when tab/window returns to focus or resumes
+  useEffect(() => {
+    const handleVisibilityOrResume = () => {
+      if (document.visibilityState && document.visibilityState !== 'visible') return;
+      syncProfileLivesIfNeeded();
+    };
+
+    window.addEventListener('focus', handleVisibilityOrResume);
+    window.addEventListener('pageshow', handleVisibilityOrResume);
+    document.addEventListener('visibilitychange', handleVisibilityOrResume);
+    return () => {
+      window.removeEventListener('focus', handleVisibilityOrResume);
+      window.removeEventListener('pageshow', handleVisibilityOrResume);
+      document.removeEventListener('visibilitychange', handleVisibilityOrResume);
+    };
+  }, [syncProfileLivesIfNeeded]);
 
   // Synchronize save to localStorage whenever profile or levels change
   useEffect(() => {
@@ -177,22 +211,24 @@ export default function App() {
   }, []);
 
   // Open pre-game booster modal instead of launching immediately without booster option / life check
-  const handleSelectLevelFromMap = useCallback((level: LevelInfo) => {
-    if (!level.isUnlocked) return;
-    const synced = syncLivesWithTimestamp(playerProfileRef.current, Date.now());
-    playerProfileRef.current = synced;
-    setPlayerProfile(synced);
-    setPendingStartLevel(level);
-  }, []);
+  const handleSelectLevelFromMap = useCallback(
+    (level: LevelInfo) => {
+      if (!level.isUnlocked) return;
+      syncProfileLivesIfNeeded();
+      setPendingStartLevel(level);
+    },
+    [syncProfileLivesIfNeeded]
+  );
 
-  const handleSelectLevel = useCallback((level: LevelInfo) => {
-    if (!level.isUnlocked) return;
-    setIsLevelSelectOpen(false);
-    const synced = syncLivesWithTimestamp(playerProfileRef.current, Date.now());
-    playerProfileRef.current = synced;
-    setPlayerProfile(synced);
-    setPendingStartLevel(level);
-  }, []);
+  const handleSelectLevel = useCallback(
+    (level: LevelInfo) => {
+      if (!level.isUnlocked) return;
+      setIsLevelSelectOpen(false);
+      syncProfileLivesIfNeeded();
+      setPendingStartLevel(level);
+    },
+    [syncProfileLivesIfNeeded]
+  );
 
   const handleCancelPreGameModal = useCallback(() => {
     // Exiting before starting never deducts coins or lives
@@ -201,10 +237,13 @@ export default function App() {
 
   const handleStartLevelWithBoosters = useCallback(
     (level: LevelInfo, selectedBoosters: PreGameBoosterType[]) => {
-      const synced = syncLivesWithTimestamp(playerProfileRef.current, Date.now());
+      const nowMs = Date.now();
+      const synced = syncLivesWithTimestamp(playerProfileRef.current, nowMs);
       if (synced.lives <= 0) {
-        playerProfileRef.current = synced;
-        setPlayerProfile(synced);
+        if (hasMeaningfulLifeStateChange(playerProfileRef.current, synced, nowMs)) {
+          playerProfileRef.current = synced;
+          setPlayerProfile(synced);
+        }
         return;
       }
 
@@ -256,10 +295,13 @@ export default function App() {
 
   // Deduct at most 1 life per active attempt (when failing, restarting, or abandoning after consuming a move)
   const handleLifeLost = useCallback((attemptId?: string): number => {
+    const nowMs = Date.now();
     if (attemptId && processedLifeLossAttemptsRef.current.has(attemptId)) {
-      const synced = syncLivesWithTimestamp(playerProfileRef.current, Date.now());
-      playerProfileRef.current = synced;
-      setPlayerProfile(synced);
+      const synced = syncLivesWithTimestamp(playerProfileRef.current, nowMs);
+      if (hasMeaningfulLifeStateChange(playerProfileRef.current, synced, nowMs)) {
+        playerProfileRef.current = synced;
+        setPlayerProfile(synced);
+      }
       return synced.lives;
     }
 
@@ -267,7 +309,7 @@ export default function App() {
       processedLifeLossAttemptsRef.current.add(attemptId);
     }
 
-    const updatedProfile = deductLife(playerProfileRef.current, Date.now());
+    const updatedProfile = deductLife(playerProfileRef.current, nowMs);
     playerProfileRef.current = updatedProfile;
     setPlayerProfile(updatedProfile);
     saveGameData(updatedProfile, levelsRef.current);
@@ -292,8 +334,10 @@ export default function App() {
     const nowMs = Date.now();
     const synced = syncLivesWithTimestamp(playerProfileRef.current, nowMs);
     if (synced.lives >= synced.maxLives) {
-      playerProfileRef.current = synced;
-      setPlayerProfile(synced);
+      if (hasMeaningfulLifeStateChange(playerProfileRef.current, synced, nowMs)) {
+        playerProfileRef.current = synced;
+        setPlayerProfile(synced);
+      }
       return false;
     }
 
@@ -305,8 +349,10 @@ export default function App() {
     processedLifeRewardTokensRef.current.add(reward.token);
     const grantResult = grantLife(synced, nowMs);
     if (!grantResult.granted) {
-      playerProfileRef.current = grantResult.profile;
-      setPlayerProfile(grantResult.profile);
+      if (hasMeaningfulLifeStateChange(playerProfileRef.current, grantResult.profile, nowMs)) {
+        playerProfileRef.current = grantResult.profile;
+        setPlayerProfile(grantResult.profile);
+      }
       return false;
     }
 
@@ -413,14 +459,12 @@ export default function App() {
 
     if (nextLevel) {
       const target: LevelInfo = { ...nextLevel, isUnlocked: true };
-      const synced = syncLivesWithTimestamp(playerProfileRef.current, Date.now());
-      playerProfileRef.current = synced;
-      setPlayerProfile(synced);
+      syncProfileLivesIfNeeded();
       setPendingStartLevel(target);
     } else {
       setActiveScreen('map');
     }
-  }, []);
+  }, [syncProfileLivesIfNeeded]);
 
   // Reset Progress from Settings
   const handleResetProgress = () => {
@@ -464,6 +508,7 @@ export default function App() {
             onOpenSettings={handleOpenSettings}
             onOpenLevelSelect={handleOpenMap}
             onPlayClick={handlePlayClick}
+            onSyncLives={syncProfileLivesIfNeeded}
           />
         ) : activeScreen === 'map' ? (
           <CandyWorldMap
@@ -474,6 +519,7 @@ export default function App() {
             soundSettings={soundSettings}
             onSelectLevel={handleSelectLevelFromMap}
             onBackToHome={handleBackToHome}
+            onSyncLives={syncProfileLivesIfNeeded}
           />
         ) : (
           <LevelBoardPreview
@@ -489,6 +535,8 @@ export default function App() {
             playerLives={playerProfile.lives}
             playerMaxLives={playerProfile.maxLives}
             nextLifeSeconds={playerProfile.nextLifeSeconds}
+            lastLifeUpdatedAt={playerProfile.lastLifeUpdatedAt}
+            onSyncLives={syncProfileLivesIfNeeded}
             initialPreGameBoosters={activePreGameBoosters}
             onSpendCoins={handleSpendCoins}
             onLifeLost={handleLifeLost}
@@ -504,6 +552,7 @@ export default function App() {
           soundSettings={soundSettings}
           onStartLevel={handleStartLevelWithBoosters}
           onClaimRewardedLife={handleClaimRewardedLife}
+          onSyncLives={syncProfileLivesIfNeeded}
           onClose={handleCancelPreGameModal}
         />
 

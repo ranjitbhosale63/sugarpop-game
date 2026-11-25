@@ -14,7 +14,7 @@ import confetti from 'canvas-confetti';
 import { LevelInfo, PlayerProfile, SoundSettings, CandyShape } from '../types/game';
 import { soundEngine } from '../audio/SoundEffects';
 import { OriginalCandy } from './OriginalCandies';
-import { formatRegenCountdown } from '../game-engine/economyEngine';
+import { LifeRegenCountdown } from './LifeRegenCountdown';
 import {
   getLevelDefinition,
   getWorldForLevel,
@@ -29,6 +29,7 @@ interface AndroidHomeScreenProps {
   onOpenSettings: () => void;
   onOpenLevelSelect: () => void;
   onPlayClick: () => void;
+  onSyncLives?: () => void;
 }
 
 interface FloatingCandyItem {
@@ -49,6 +50,7 @@ export const AndroidHomeScreen: React.FC<AndroidHomeScreenProps> = ({
   onOpenSettings,
   onOpenLevelSelect,
   onPlayClick,
+  onSyncLives,
 }) => {
   const [poppedCount, setPoppedCount] = useState(0);
 
@@ -182,11 +184,15 @@ export const AndroidHomeScreen: React.FC<AndroidHomeScreenProps> = ({
             <span className="text-xs font-black tracking-wide tabular-nums">
               {playerProfile.lives}/{playerProfile.maxLives}
             </span>
-            <span className="text-[10px] font-extrabold text-pink-200 tabular-nums">
-              {playerProfile.lives >= playerProfile.maxLives
-                ? 'FULL'
-                : formatRegenCountdown(playerProfile.nextLifeSeconds)}
-            </span>
+            <LifeRegenCountdown
+              lives={playerProfile.lives}
+              maxLives={playerProfile.maxLives}
+              nextLifeSeconds={playerProfile.nextLifeSeconds}
+              lastLifeUpdatedAt={playerProfile.lastLifeUpdatedAt}
+              fullLabel="FULL"
+              onRegenReady={onSyncLives}
+              className="text-[10px] font-extrabold text-pink-200 tabular-nums"
+            />
           </div>
 
           {/* Coins Pill */}
@@ -217,34 +223,28 @@ export const AndroidHomeScreen: React.FC<AndroidHomeScreenProps> = ({
       {/* MIDDLE: Candy Logo & Mascots */}
       <div className="relative z-20 flex-1 flex flex-col items-center justify-center px-4 py-2 my-auto">
         {/* Trio of sparkling candies above logo */}
-        <div className="flex items-center gap-4 mb-3 animate-gentle-float">
+        <div className="flex items-center gap-4 mb-2.5 animate-gentle-float">
           <OriginalCandy type="strawberry_drop" size={38} />
           <OriginalCandy type="star_lemon" size={46} />
           <OriginalCandy type="blueberry_oval" size={38} />
         </div>
 
-        {/* 3D Glossy Sugar Pop Game Title */}
-        <div className="relative group cursor-pointer" onClick={() => {
-          if (soundSettings.soundEffectsEnabled) soundEngine.playPop(1.4, soundSettings.masterVolume);
-        }}>
-          {/* Glow backdrop behind text */}
-          <div className="absolute inset-0 rounded-3xl bg-pink-500/30 blur-xl group-hover:bg-pink-400/40 transition-all" />
+        {/* Official SugarPop Square Logo */}
+        <div
+          className="relative group cursor-pointer"
+          onClick={() => {
+            if (soundSettings.soundEffectsEnabled) soundEngine.playPop(1.4, soundSettings.masterVolume);
+          }}
+        >
+          {/* Glow backdrop behind logo */}
+          <div className="absolute -inset-1 rounded-[32px] bg-pink-500/35 blur-xl group-hover:bg-pink-400/45 transition-all" />
 
-          <div className="relative flex flex-col items-center px-8 py-3 rounded-3xl bg-gradient-to-b from-white/15 via-white/5 to-black/30 backdrop-blur-md border-2 border-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.5)]">
-            <h1 className="text-4xl sm:text-5xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#fff382] via-[#ffd214] to-[#f58e00] candy-title-stroke drop-shadow-lg leading-none">
-              SUGAR
-            </h1>
-            <h1 className="text-5xl sm:text-6xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-[#ffffff] via-[#ffe5f1] to-[#ffb6d8] candy-title-stroke -mt-2 leading-none">
-              POP
-            </h1>
-
-            {/* Candy Badge */}
-            <div className="mt-1 px-4 py-1 rounded-full bg-gradient-to-r from-pink-500 via-rose-500 to-amber-500 border border-white/60 shadow-md">
-              <span className="text-[11px] font-black tracking-widest uppercase text-white drop-shadow">
-                MATCH-3 PUZZLE
-              </span>
-            </div>
-          </div>
+          <img
+            src="/assets/aistudio/sugarpop_logo_square_under_1mb-1_52682498.jpg"
+            alt="SugarPop Match-3"
+            className="relative w-44 h-44 sm:w-52 sm:h-52 aspect-square rounded-[28px] object-cover border-2 border-white/40 shadow-[0_16px_36px_rgba(0,0,0,0.55)] transition-transform duration-200 group-hover:scale-[1.03] active:scale-95"
+            draggable={false}
+          />
         </div>
 
         {/* Pops counter bubble */}

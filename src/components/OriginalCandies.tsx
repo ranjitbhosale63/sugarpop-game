@@ -107,7 +107,7 @@ function renderSpecialOverlay(special: SpecialCandyType | undefined, clipId: str
   return null;
 }
 
-export const OriginalCandy: React.FC<CandyProps> = ({
+const OriginalCandyComponent: React.FC<CandyProps> = ({
   type,
   special = null,
   size = 48,
@@ -116,7 +116,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
 }) => {
   const uid = useId().replace(/:/g, '');
   const gradId = `candy-grad-${type}-${uid}`;
-  const glowId = `candy-glow-${type}-${uid}`;
   const clipId = `candy-clip-${type}-${uid}`;
   const animClass = animate ? 'hover:scale-110 transition-transform duration-200 cursor-pointer' : '';
 
@@ -138,9 +137,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
             <stop offset="80%" stopColor="#1d0718" />
             <stop offset="100%" stopColor="#0d020b" />
           </radialGradient>
-          <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#180028" floodOpacity="0.65" />
-          </filter>
         </defs>
         {/* Outer Prismatic Halo Ring */}
         <circle
@@ -151,7 +147,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
           stroke="#ffe082"
           strokeWidth="2.5"
           strokeOpacity="0.85"
-          filter={`url(#${glowId})`}
         />
         {/* Radiant Starburst Core */}
         <path
@@ -198,9 +193,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
               <stop offset="75%" stopColor="#c51162" />
               <stop offset="100%" stopColor="#880e4f" />
             </radialGradient>
-            <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#500010" floodOpacity="0.5" />
-            </filter>
             <clipPath id={clipId}>
               <path d="M50 22 C76 22, 88 56, 76 80 C68 93, 32 93, 24 80 C12 56, 24 22, 50 22 Z" />
             </clipPath>
@@ -209,7 +201,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
           <path
             d="M50 22 C76 22, 88 56, 76 80 C68 93, 32 93, 24 80 C12 56, 24 22, 50 22 Z"
             fill={`url(#${gradId})`}
-            filter={`url(#${glowId})`}
           />
           {/* 3D Glassy Body Rim */}
           <path
@@ -260,15 +251,12 @@ export const OriginalCandy: React.FC<CandyProps> = ({
               <stop offset="70%" stopColor="#ff6d00" />
               <stop offset="100%" stopColor="#bf360c" />
             </radialGradient>
-            <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#7f2300" floodOpacity="0.5" />
-            </filter>
             <clipPath id={clipId}>
               <circle cx="50" cy="50" r="42" />
             </clipPath>
           </defs>
           {/* Outer Round Candy Disk */}
-          <circle cx="50" cy="50" r="42" fill={`url(#${gradId})`} filter={`url(#${glowId})`} />
+          <circle cx="50" cy="50" r="42" fill={`url(#${gradId})`} />
           {/* Inner Light Citrus Rind */}
           <circle cx="50" cy="50" r="37" fill="#fff3e0" fillOpacity="0.3" stroke="#ffd180" strokeWidth="1.5" />
           {/* Citrus Fruit Wedge Segments (8 slices) */}
@@ -312,9 +300,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
               <stop offset="85%" stopColor="#ffab00" />
               <stop offset="100%" stopColor="#c67c00" />
             </radialGradient>
-            <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#8c5000" floodOpacity="0.5" />
-            </filter>
             <clipPath id={clipId}>
               <path d="M50 6 L63 37 L94 50 L63 63 L50 94 L37 63 L6 50 L37 37 Z" />
             </clipPath>
@@ -323,7 +308,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
           <path
             d="M50 6 L63 37 L94 50 L63 63 L50 94 L37 63 L6 50 L37 37 Z"
             fill={`url(#${gradId})`}
-            filter={`url(#${glowId})`}
           />
           {/* 3D Facet Bevel Ridge Lines */}
           <path
@@ -364,9 +348,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
               <stop offset="85%" stopColor="#00c853" />
               <stop offset="100%" stopColor="#004d1a" />
             </linearGradient>
-            <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#003d14" floodOpacity="0.5" />
-            </filter>
             <clipPath id={clipId}>
               <polygon points="50,8 86,28 86,72 50,92 14,72 14,28" />
             </clipPath>
@@ -375,7 +356,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
           <polygon
             points="50,8 86,28 86,72 50,92 14,72 14,28"
             fill={`url(#${gradId})`}
-            filter={`url(#${glowId})`}
           />
           {/* Hexagon 3D Outer Bevel */}
           <polygon
@@ -419,9 +399,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
               <stop offset="85%" stopColor="#0091ea" />
               <stop offset="100%" stopColor="#01579b" />
             </radialGradient>
-            <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#002f6c" floodOpacity="0.55" />
-            </filter>
             <clipPath id={clipId}>
               <polygon points="50,6 94,50 50,94 6,50" />
             </clipPath>
@@ -430,7 +407,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
           <polygon
             points="50,6 94,50 50,94 6,50"
             fill={`url(#${gradId})`}
-            filter={`url(#${glowId})`}
           />
           {/* Outer Diamond Bevel */}
           <polygon
@@ -477,9 +453,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
               <stop offset="85%" stopColor="#7209b7" />
               <stop offset="100%" stopColor="#38006b" />
             </radialGradient>
-            <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#210040" floodOpacity="0.55" />
-            </filter>
             <clipPath id={clipId}>
               <path d="M50 86 C12 60, 8 26, 32 18 C43 14, 48 22, 50 26 C52 22, 57 14, 68 18 C92 26, 88 60, 50 86 Z" />
             </clipPath>
@@ -488,7 +461,6 @@ export const OriginalCandy: React.FC<CandyProps> = ({
           <path
             d="M50 86 C12 60, 8 26, 32 18 C43 14, 48 22, 50 26 C52 22, 57 14, 68 18 C92 26, 88 60, 50 86 Z"
             fill={`url(#${gradId})`}
-            filter={`url(#${glowId})`}
           />
           {/* 3D Heart Outer Rim Bevel */}
           <path
@@ -519,14 +491,11 @@ export const OriginalCandy: React.FC<CandyProps> = ({
           className={`${animClass} ${className} drop-shadow-[0_4px_6px_rgba(40,0,60,0.55)]`}
         >
           <defs>
-            <filter id={glowId} x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="4" stdDeviation="3.5" floodColor="#25023f" floodOpacity="0.55" />
-            </filter>
             <clipPath id={clipId}>
               <circle cx="50" cy="50" r="40" />
             </clipPath>
           </defs>
-          <circle cx="50" cy="50" r="40" fill="#1e0c38" filter={`url(#${glowId})`} />
+          <circle cx="50" cy="50" r="40" fill="#1e0c38" />
           {/* Rainbow 4 Quadrant Sectors */}
           <path d="M50 50 L50 10 A40 40 0 0 1 90 50 Z" fill="#ff1744" />
           <path d="M50 50 L90 50 A40 40 0 0 1 50 90 Z" fill="#ffd600" />
@@ -541,3 +510,5 @@ export const OriginalCandy: React.FC<CandyProps> = ({
       );
   }
 };
+
+export const OriginalCandy = React.memo(OriginalCandyComponent);

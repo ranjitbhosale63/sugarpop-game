@@ -38,11 +38,13 @@ import { soundEngine } from '../audio/SoundEffects';
 import { OriginalCandy } from './OriginalCandies';
 import { ExtraMovesOfferModal } from './ExtraMovesOfferModal';
 import { RewardedAdPlayerModal } from './RewardedAdPlayerModal';
+import { LifeRegenCountdown } from './LifeRegenCountdown';
 import { rewardedAdsService, RewardedAdResult } from '../services/rewardedAds';
 import {
   IN_GAME_BOOSTERS,
   canAffordCoins,
   formatRegenCountdown,
+  getRemainingRegenSeconds,
 } from '../game-engine/economyEngine';
 import {
   SUGAR_CRUSH_MOVE_BONUS,
@@ -119,6 +121,8 @@ interface LevelBoardPreviewProps {
   playerLives: number;
   playerMaxLives: number;
   nextLifeSeconds: number;
+  lastLifeUpdatedAt?: number;
+  onSyncLives?: () => void;
   initialPreGameBoosters?: PreGameBoosterType[];
   onSpendCoins: (cost: number, booster: BoosterType) => boolean;
   onLifeLost: (attemptId: string) => number | void;
@@ -428,6 +432,8 @@ export const LevelBoardPreview: React.FC<LevelBoardPreviewProps> = ({
   playerLives,
   playerMaxLives,
   nextLifeSeconds,
+  lastLifeUpdatedAt,
+  onSyncLives,
   initialPreGameBoosters = [],
   onSpendCoins,
   onLifeLost,
@@ -2458,8 +2464,12 @@ export const LevelBoardPreview: React.FC<LevelBoardPreviewProps> = ({
     if (hasEndedInGameOverRef.current || isGameOver) {
       if (playerLives <= 0) {
         if (soundSettings.soundEffectsEnabled) soundEngine.playInvalidSwap(soundSettings.masterVolume);
+        const liveRemaining = getRemainingRegenSeconds(
+          { lives: playerLives, maxLives: playerMaxLives, nextLifeSeconds, lastLifeUpdatedAt },
+          Date.now()
+        );
         showBoosterToast(
-          `Out of lives! Next life in ${formatRegenCountdown(nextLifeSeconds)}.`,
+          `Out of lives! Next life in ${formatRegenCountdown(liveRemaining)}.`,
           'error'
         );
         return;
@@ -2485,8 +2495,12 @@ export const LevelBoardPreview: React.FC<LevelBoardPreviewProps> = ({
       if (hadConsumedMove) {
         triggerGameOver();
       } else {
+        const liveRemaining = getRemainingRegenSeconds(
+          { lives: 0, maxLives: playerMaxLives, nextLifeSeconds, lastLifeUpdatedAt },
+          Date.now()
+        );
         showBoosterToast(
-          `Out of lives! Next life in ${formatRegenCountdown(nextLifeSeconds)}.`,
+          `Out of lives! Next life in ${formatRegenCountdown(liveRemaining)}.`,
           'error'
         );
       }
@@ -2669,9 +2683,15 @@ export const LevelBoardPreview: React.FC<LevelBoardPreviewProps> = ({
           <span className="text-white tabular-nums">
             {playerLives}/{playerMaxLives}
           </span>
-          <span className="text-[10px] font-bold text-rose-200 tabular-nums">
-            {playerLives >= playerMaxLives ? 'FULL' : formatRegenCountdown(nextLifeSeconds)}
-          </span>
+          <LifeRegenCountdown
+            lives={playerLives}
+            maxLives={playerMaxLives}
+            nextLifeSeconds={nextLifeSeconds}
+            lastLifeUpdatedAt={lastLifeUpdatedAt}
+            fullLabel="FULL"
+            onRegenReady={onSyncLives}
+            className="text-[10px] font-bold text-rose-200 tabular-nums"
+          />
         </div>
 
         <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-black/40 border border-amber-400/35">
@@ -3707,7 +3727,15 @@ export const LevelBoardPreview: React.FC<LevelBoardPreviewProps> = ({
               <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
               <span>
                 -1 Life • {playerLives}/{playerMaxLives} Left (
-                {playerLives >= playerMaxLives ? 'FULL' : formatRegenCountdown(nextLifeSeconds)})
+                <LifeRegenCountdown
+                  lives={playerLives}
+                  maxLives={playerMaxLives}
+                  nextLifeSeconds={nextLifeSeconds}
+                  lastLifeUpdatedAt={lastLifeUpdatedAt}
+                  fullLabel="FULL"
+                  onRegenReady={onSyncLives}
+                />
+                )
               </span>
             </div>
 
@@ -3754,7 +3782,18 @@ export const LevelBoardPreview: React.FC<LevelBoardPreviewProps> = ({
                 onClick={handleResetLevel}
                 className="flex-1 py-2.5 rounded-2xl bg-gradient-to-b from-rose-500 to-pink-600 text-white font-extrabold text-xs shadow-md hover:brightness-110 active:scale-95 transition-all cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed"
               >
-                {playerLives > 0 ? 'Try Again' : `Wait ${formatRegenCountdown(nextLifeSeconds)}`}
+                {playerLives > 0 ? (
+                  'Try Again'
+                ) : (
+                  <LifeRegenCountdown
+                    lives={playerLives}
+                    maxLives={playerMaxLives}
+                    nextLifeSeconds={nextLifeSeconds}
+                    lastLifeUpdatedAt={lastLifeUpdatedAt}
+                    prefix="Wait "
+                    onRegenReady={onSyncLives}
+                  />
+                )}
               </button>
             </div>
           </div>

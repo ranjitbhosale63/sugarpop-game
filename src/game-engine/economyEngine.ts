@@ -132,6 +132,7 @@ export function syncLivesWithTimestamp(
   nowMs: number = Date.now(),
   regenIntervalSec: number = LIFE_REGEN_INTERVAL_SECONDS
 ): PlayerProfile {
+  const safeNowMs = Number.isFinite(nowMs) && nowMs > 0 ? nowMs : Date.now();
   const interval = Math.max(1, Math.floor(regenIntervalSec));
   const maxLives =
     Number.isFinite(profile.maxLives) && profile.maxLives >= 1
@@ -147,7 +148,7 @@ export function syncLivesWithTimestamp(
       lives: maxLives,
       maxLives,
       nextLifeSeconds: interval,
-      lastLifeUpdatedAt: nowMs,
+      lastLifeUpdatedAt: safeNowMs,
     };
   }
 
@@ -160,10 +161,10 @@ export function syncLivesWithTimestamp(
     typeof profile.lastLifeUpdatedAt === 'number' &&
     Number.isFinite(profile.lastLifeUpdatedAt) &&
     profile.lastLifeUpdatedAt > 0
-      ? Math.min(nowMs, profile.lastLifeUpdatedAt)
-      : nowMs;
+      ? Math.min(safeNowMs, profile.lastLifeUpdatedAt)
+      : safeNowMs;
 
-  const elapsedSec = Math.max(0, Math.floor((nowMs - lastUpdated) / 1000));
+  const elapsedSec = Math.max(0, Math.floor((safeNowMs - lastUpdated) / 1000));
 
   if (elapsedSec === 0) {
     return {
@@ -198,7 +199,7 @@ export function syncLivesWithTimestamp(
       lives: maxLives,
       maxLives,
       nextLifeSeconds: interval,
-      lastLifeUpdatedAt: nowMs,
+      lastLifeUpdatedAt: safeNowMs,
     };
   }
 
@@ -212,6 +213,105 @@ export function syncLivesWithTimestamp(
     nextLifeSeconds: nextRemaining,
     lastLifeUpdatedAt: alignedNowMs,
   };
+}
+
+export type LifeTimingInput = Pick<
+  PlayerProfile,
+  'lives' | 'maxLives' | 'nextLifeSeconds' | 'lastLifeUpdatedAt'
+>;
+
+/**
+ * Computes the remaining seconds until the next life is regenerated using the persisted
+ * wall-clock anchor without mutating profile state. Returns 0 when lives are full.
+ */
+export function getRemainingRegenSeconds(
+  profile: LifeTimingInput,
+  nowMs: number = Date.now(),
+  regenIntervalSec: number = LIFE_REGEN_INTERVAL_SECONDS
+): number {
+  const safeNowMs = Number.isFinite(nowMs) && nowMs > 0 ? nowMs : Date.now();
+  const interval = Math.max(1, Math.floor(regenIntervalSec));
+  const maxLives =
+    Number.isFinite(profile.maxLives) && profile.maxLives >= 1
+      ? Math.floor(profile.maxLives)
+      : DEFAULT_MAX_LIVES;
+  const rawLives = Number.isFinite(profile.lives) ? Math.floor(profile.lives) : maxLives;
+  const clampedLives = Math.max(0, Math.min(maxLives, rawLives));
+
+  if (clampedLives >= maxLives) {
+    return 0;
+  }
+
+  const synced = syncLivesWithTimestamp(profile as PlayerProfile, safeNowMs, interval);
+  if (synced.lives >= synced.maxLives) {
+    return 0;
+  }
+  return synced.nextLifeSeconds;
+}
+
+/**
+ * Returns the exact milliseconds remaining until the next life completes regeneration,
+ * or null if lives are already at maxLives.
+ */
+export function getMsUntilNextLife(
+  profile: LifeTimingInput,
+  nowMs: number = Date.now(),
+  regenIntervalSec: number = LIFE_REGEN_INTERVAL_SECONDS
+): number | null {
+  const safeNowMs = Number.isFinite(nowMs) && nowMs > 0 ? nowMs : Date.now();
+  const interval = Math.max(1, Math.floor(regenIntervalSec));
+  const maxLives =
+    Number.isFinite(profile.maxLives) && profile.maxLives >= 1
+      ? Math.floor(profile.maxLives)
+      : DEFAULT_MAX_LIVES;
+  const rawLives = Number.isFinite(profile.lives) ? Math.floor(profile.lives) : maxLives;
+  const clampedLives = Math.max(0, Math.min(maxLives, rawLives));
+
+  if (clampedLives >= maxLives) {
+    return null;
+  }
+
+  const prevRemaining =
+    Number.isFinite(profile.nextLifeSeconds) && profile.nextLifeSeconds > 0
+      ? Math.min(interval, Math.floor(profile.nextLifeSeconds))
+      : interval;
+
+  const lastUpdated =
+    typeof profile.lastLifeUpdatedAt === 'number' &&
+    Number.isFinite(profile.lastLifeUpdatedAt) &&
+    profile.lastLifeUpdatedAt > 0
+      ? Math.min(safeNowMs, profile.lastLifeUpdatedAt)
+      : safeNowMs;
+
+  const nextTargetMs = lastUpdated + prevRemaining * 1000;
+  return Math.max(0, nextTargetMs - safeNowMs);
+}
+
+/**
+ * Determines whether syncing lives produced a meaningful persistent state change
+ * (lives/maxLives changed, missing anchor initialized, or backward system clock clamped)
+ * vs. a pure countdown tick that can remain anchored without re-rendering or saving.
+ */
+export function hasMeaningfulLifeStateChange(
+  prev: PlayerProfile,
+  synced: PlayerProfile,
+  nowMs: number = Date.now()
+): boolean {
+  if (synced.lives !== prev.lives || synced.maxLives !== prev.maxLives) {
+    return true;
+  }
+  if (
+    typeof prev.lastLifeUpdatedAt !== 'number' ||
+    !Number.isFinite(prev.lastLifeUpdatedAt) ||
+    prev.lastLifeUpdatedAt <= 0
+  ) {
+    return true;
+  }
+  const safeNowMs = Number.isFinite(nowMs) && nowMs > 0 ? nowMs : Date.now();
+  if (prev.lastLifeUpdatedAt > safeNowMs) {
+    return true;
+  }
+  return false;
 }
 
 /**

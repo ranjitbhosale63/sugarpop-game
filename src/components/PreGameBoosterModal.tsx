@@ -21,9 +21,11 @@ import {
   calculatePreGameBoostersCost,
   canAffordCoins,
   formatRegenCountdown,
+  getRemainingRegenSeconds,
 } from '../game-engine/economyEngine';
 import { RewardedAdResult } from '../services/rewardedAds';
 import { RewardedAdPlayerModal } from './RewardedAdPlayerModal';
+import { LifeRegenCountdown } from './LifeRegenCountdown';
 import { soundEngine } from '../audio/SoundEffects';
 import { OriginalCandy } from './OriginalCandies';
 
@@ -33,6 +35,7 @@ interface PreGameBoosterModalProps {
   soundSettings: SoundSettings;
   onStartLevel: (level: LevelInfo, selectedBoosters: PreGameBoosterType[]) => void;
   onClaimRewardedLife?: (result: RewardedAdResult) => boolean;
+  onSyncLives?: () => void;
   onClose: () => void;
 }
 
@@ -44,6 +47,7 @@ export const PreGameBoosterModal: React.FC<PreGameBoosterModalProps> = ({
   soundSettings,
   onStartLevel,
   onClaimRewardedLife,
+  onSyncLives,
   onClose,
 }) => {
   const [selectedBoosters, setSelectedBoosters] = useState<PreGameBoosterType[]>([]);
@@ -153,9 +157,10 @@ export const PreGameBoosterModal: React.FC<PreGameBoosterModalProps> = ({
       if (soundSettings.soundEffectsEnabled) {
         soundEngine.playInvalidSwap(soundSettings.masterVolume);
       }
+      const liveRemaining = getRemainingRegenSeconds(playerProfile, Date.now());
       setFeedbackTone('error');
       setFeedbackMessage(
-        `Out of lives! Next life in ${formatRegenCountdown(playerProfile.nextLifeSeconds)}.`
+        `Out of lives! Next life in ${formatRegenCountdown(liveRemaining)}.`
       );
       return;
     }
@@ -246,9 +251,14 @@ export const PreGameBoosterModal: React.FC<PreGameBoosterModalProps> = ({
           ) : (
             <span>
               Next life in{' '}
-              <span className="font-black text-amber-300 tabular-nums">
-                {formatRegenCountdown(playerProfile.nextLifeSeconds)}
-              </span>
+              <LifeRegenCountdown
+                lives={playerProfile.lives}
+                maxLives={playerProfile.maxLives}
+                nextLifeSeconds={playerProfile.nextLifeSeconds}
+                lastLifeUpdatedAt={playerProfile.lastLifeUpdatedAt}
+                onRegenReady={onSyncLives}
+                className="font-black text-amber-300 tabular-nums"
+              />
             </span>
           )}
         </div>
@@ -370,11 +380,20 @@ export const PreGameBoosterModal: React.FC<PreGameBoosterModalProps> = ({
           >
             <Play className="w-5 h-5 fill-current" />
             <span>
-              {!hasLives
-                ? `Wait ${formatRegenCountdown(playerProfile.nextLifeSeconds)}`
-                : totalCost > 0
-                ? `PLAY (${totalCost} COINS)`
-                : 'PLAY LEVEL'}
+              {!hasLives ? (
+                <LifeRegenCountdown
+                  lives={playerProfile.lives}
+                  maxLives={playerProfile.maxLives}
+                  nextLifeSeconds={playerProfile.nextLifeSeconds}
+                  lastLifeUpdatedAt={playerProfile.lastLifeUpdatedAt}
+                  prefix="Wait "
+                  onRegenReady={onSyncLives}
+                />
+              ) : totalCost > 0 ? (
+                `PLAY (${totalCost} COINS)`
+              ) : (
+                'PLAY LEVEL'
+              )}
             </span>
           </button>
 

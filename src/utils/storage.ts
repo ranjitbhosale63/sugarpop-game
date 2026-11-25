@@ -73,19 +73,20 @@ function sanitizeCompletedLevelRewards(
   return result;
 }
 
-export function loadGameData(): {
+export function loadGameData(nowMs: number = Date.now()): {
   playerProfile: PlayerProfile;
   levels: LevelInfo[];
 } {
+  const safeNowMs = Number.isFinite(nowMs) && nowMs > 0 ? nowMs : Date.now();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return getFreshState();
+      return getFreshState(safeNowMs);
     }
 
     const parsed: Partial<SavedGameData> = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object' || !parsed.levelData || typeof parsed.levelData !== 'object') {
-      return getFreshState();
+      return getFreshState(safeNowMs);
     }
 
     // Step 1: Merge saved level progress with INITIAL_LEVELS template
@@ -178,7 +179,7 @@ export function loadGameData(): {
       Number.isFinite(rawProfile.lastLifeUpdatedAt) &&
       rawProfile.lastLifeUpdatedAt > 0
         ? rawProfile.lastLifeUpdatedAt
-        : Date.now();
+        : safeNowMs;
 
     const baseProfile: PlayerProfile = {
       lives,
@@ -196,7 +197,7 @@ export function loadGameData(): {
       boosterInventory: sanitizeBoosterInventory(rawProfile.boosterInventory),
     };
 
-    const syncedProfile = syncLivesWithTimestamp(baseProfile, Date.now());
+    const syncedProfile = syncLivesWithTimestamp(baseProfile, safeNowMs);
 
     return {
       playerProfile: syncedProfile,
@@ -204,7 +205,7 @@ export function loadGameData(): {
     };
   } catch (err) {
     console.warn('Failed to load game save data:', err);
-    return getFreshState();
+    return getFreshState(safeNowMs);
   }
 }
 
@@ -226,13 +227,27 @@ export function saveGameData(profile: PlayerProfile, levels: LevelInfo[]): void 
       };
     });
 
+    const rawNextLifeSec = Number.isFinite(profile.nextLifeSeconds)
+      ? Math.floor(profile.nextLifeSeconds)
+      : LIFE_REGEN_INTERVAL_SECONDS;
+    const boundedNextLifeSec = Math.min(
+      LIFE_REGEN_INTERVAL_SECONDS,
+      Math.max(1, rawNextLifeSec > 0 ? rawNextLifeSec : LIFE_REGEN_INTERVAL_SECONDS)
+    );
+    const safeLastLifeUpdatedAt =
+      typeof profile.lastLifeUpdatedAt === 'number' &&
+      Number.isFinite(profile.lastLifeUpdatedAt) &&
+      profile.lastLifeUpdatedAt > 0
+        ? profile.lastLifeUpdatedAt
+        : Date.now();
+
     const safeProfile: PlayerProfile = {
       ...profile,
       coins: sanitizeCoins(profile.coins, 0),
       lives: Math.max(0, Math.min(profile.maxLives || DEFAULT_MAX_LIVES, Math.floor(profile.lives))),
       maxLives: Math.max(1, Math.floor(profile.maxLives || DEFAULT_MAX_LIVES)),
-      nextLifeSeconds: Math.max(1, Math.floor(profile.nextLifeSeconds || LIFE_REGEN_INTERVAL_SECONDS)),
-      lastLifeUpdatedAt: profile.lastLifeUpdatedAt ?? Date.now(),
+      nextLifeSeconds: boundedNextLifeSec,
+      lastLifeUpdatedAt: safeLastLifeUpdatedAt,
       boosterInventory: sanitizeBoosterInventory(profile.boosterInventory),
     };
 
@@ -255,10 +270,11 @@ export function clearGameData(): void {
   }
 }
 
-export function getFreshState(): {
+export function getFreshState(nowMs: number = Date.now()): {
   playerProfile: PlayerProfile;
   levels: LevelInfo[];
 } {
+  const safeNowMs = Number.isFinite(nowMs) && nowMs > 0 ? nowMs : Date.now();
   const freshLevels = INITIAL_LEVELS.map((lvl) => ({
     ...lvl,
     starsEarned: 0,
@@ -270,7 +286,7 @@ export function getFreshState(): {
     lives: DEFAULT_MAX_LIVES,
     maxLives: DEFAULT_MAX_LIVES,
     nextLifeSeconds: LIFE_REGEN_INTERVAL_SECONDS,
-    lastLifeUpdatedAt: Date.now(),
+    lastLifeUpdatedAt: safeNowMs,
     coins: DEFAULT_STARTING_COINS,
     currentLevel: 1,
     totalStars: 0,
